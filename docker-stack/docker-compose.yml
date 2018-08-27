@@ -1,0 +1,19 @@
+version: '3'
+services:
+  my_sql_percona:
+    image: percona:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: tms
+    ports:
+    - "3306:3306"
+  migration:
+    image: boxfuse/flyway:latest
+    volumes:
+     - ../sql:/flyway/sql
+    command: ["-url=jdbc:mysql://my_sql_percona:3306/tms?useUnicode=true&characterEncoding=utf8&useSSL=false", "-user=root", "-password=password", "migrate"]
+    depends_on:
+      - my_sql_percona
+    deploy:
+      restart_policy:
+        condition: on-failure

@@ -30,3 +30,8 @@ What didn't _always_ work for me (YMMV):
    is actually ready to serve requests so the Flyway container can be started too early and fail.
 2. https://github.com/vishnubob/wait-for-it[wait-for-it.sh] - again the database port can be available before
    the database is actually ready to serve requests.
+
+One other option that works:
+
+1. link:docker-stack[docker stack] - this solution uses docker stack / swarm to deploy the services with a restart
+   policy. Although this still uses the `docker-compose.yml` file, `docker-compose` itself is not used.

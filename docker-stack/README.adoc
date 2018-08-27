@@ -1,0 +1,73 @@
+= docker stack restart policy
+
+The docker-compose v3 syntax introduced
+https://docs.docker.com/compose/compose-file/#restart_policy[restart policy], e.g.:
+
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+However, these are ignored by docker-compose and only work with docker swarm.
+
+The Flyway container will fail and exit if it cannot connect to the MySQL database. However, if deployed
+to swarm with the above restart policy, swarm will continue to restart the Flyway container until it exits
+successfully.
+
+## Running the example
+
+Create the swarm cluster:
+
+    docker swarm init --advertise-addr <your-ip-address>
+
+Deploy the services:
+
+    docker stack deploy --compose-file docker-compose.yml flyway_mysql
+
+List the deployed services:
+
+    $ docker service ls
+    ID                  NAME                          MODE                REPLICAS            IMAGE                   PORTS
+    e3s8n6p5gg53        flyway_mysql_migration        replicated          0/1                 boxfuse/flyway:latest
+    s1ri312j0pu1        flyway_mysql_my_sql_percona   replicated          1/1                 percona:latest          *:3306->3306/tcp
+
+Tail the logs for the Flyway container service:
+
+    $ docker service logs -f flyway_mysql_migration
+    flyway_mysql_migration.1.heace5zg0p01@io    | Flyway Community Edition 5.1.4 by Boxfuse
+    flyway_mysql_migration.1.heace5zg0p01@io    | 
+    flyway_mysql_migration.1.heace5zg0p01@io    | ERROR: 
+    flyway_mysql_migration.1.heace5zg0p01@io    | Unable to obtain connection from database (jdbc:mysql://my_sql_percona:3306/tms?useUnicode=true&characterEncoding=utf8&useSSL=false) for user 'root': Could not connect to address=(host=my_sql_percona)(port=3306)(type=master) : Connection refused (Connection refused)
+    flyway_mysql_migration.1.heace5zg0p01@io    | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    flyway_mysql_migration.1.heace5zg0p01@io    | SQL State  : 08
+    flyway_mysql_migration.1.heace5zg0p01@io    | Error Code : -1
+    flyway_mysql_migration.1.heace5zg0p01@io    | Message    : Could not connect to address=(host=my_sql_percona)(port=3306)(type=master) : Connection refused (Connection refused)
+    flyway_mysql_migration.1.heace5zg0p01@io    | 
+    flyway_mysql_migration.1.4ark1z050n6j@io    | Flyway Community Edition 5.1.4 by Boxfuse
+    flyway_mysql_migration.1.4ark1z050n6j@io    | 
+    flyway_mysql_migration.1.4ark1z050n6j@io    | ERROR: 
+    flyway_mysql_migration.1.4ark1z050n6j@io    | Unable to obtain connection from database (jdbc:mysql://my_sql_percona:3306/tms?useUnicode=true&characterEncoding=utf8&useSSL=false) for user 'root': Could not connect to address=(host=my_sql_percona)(port=3306)(type=master) : Connection refused (Connection refused)
+    flyway_mysql_migration.1.4ark1z050n6j@io    | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    flyway_mysql_migration.1.4ark1z050n6j@io    | SQL State  : 08
+    flyway_mysql_migration.1.4ark1z050n6j@io    | Error Code : -1
+    flyway_mysql_migration.1.4ark1z050n6j@io    | Message    : Could not connect to address=(host=my_sql_percona)(port=3306)(type=master) : Connection refused (Connection refused)
+    flyway_mysql_migration.1.4ark1z050n6j@io    | 
+    flyway_mysql_migration.1.3jzf8b0hy0ce@io    | Flyway Community Edition 5.1.4 by Boxfuse
+    flyway_mysql_migration.1.3jzf8b0hy0ce@io    | 
+    flyway_mysql_migration.1.3jzf8b0hy0ce@io    | ERROR: 
+    flyway_mysql_migration.1.3jzf8b0hy0ce@io    | Unable to obtain connection from database (jdbc:mysql://my_sql_percona:3306/tms?useUnicode=true&characterEncoding=utf8&useSSL=false) for user 'root': Could not connect to address=(host=my_sql_percona)(port=3306)(type=master) : Connection refused (Connection refused)
+    flyway_mysql_migration.1.3jzf8b0hy0ce@io    | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    flyway_mysql_migration.1.3jzf8b0hy0ce@io    | SQL State  : 08
+    flyway_mysql_migration.1.3jzf8b0hy0ce@io    | Error Code : -1
+    flyway_mysql_migration.1.3jzf8b0hy0ce@io    | Message    : Could not connect to address=(host=my_sql_percona)(port=3306)(type=master) : Connection refused (Connection refused)
+    flyway_mysql_migration.1.3jzf8b0hy0ce@io    | 
+    flyway_mysql_migration.1.mylmsp45vj2f@io    | Flyway Community Edition 5.1.4 by Boxfuse
+    flyway_mysql_migration.1.mylmsp45vj2f@io    | 
+    flyway_mysql_migration.1.mylmsp45vj2f@io    | Database: jdbc:mysql://my_sql_percona:3306/tms (MySQL 5.7)
+    flyway_mysql_migration.1.mylmsp45vj2f@io    | WARNING: You are connected to a MySQL database using the MariaDB driver. This is known to cause issues. An upgrade to Oracle's MySQL JDBC driver is highly recommended.
+    flyway_mysql_migration.1.mylmsp45vj2f@io    | Successfully validated 1 migration (execution time 00:00.007s)
+    flyway_mysql_migration.1.mylmsp45vj2f@io    | Creating Schema History table: `tms`.`flyway_schema_history`
+    flyway_mysql_migration.1.mylmsp45vj2f@io    | Current version of schema `tms`: << Empty Schema >>
+    flyway_mysql_migration.1.mylmsp45vj2f@io    | Migrating schema `tms` to version 1.0 - init
+    flyway_mysql_migration.1.mylmsp45vj2f@io    | Successfully applied 1 migration to schema `tms` (execution time 00:00.242s)
+
+In this case, the Flyway container failed the first 3 times and succeeded on the fourth attempt.
