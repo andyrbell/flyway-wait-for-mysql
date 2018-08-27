@@ -1,0 +1,5 @@
+= wait-for-it.sh
+
+Wait for the database port to be available. Not guaranteed to work as the port may be available before the database is ready.
+
+The wait-for-it.sh script is made available from mounted volume: `/flyway/bin`.

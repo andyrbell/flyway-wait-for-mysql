@@ -1,0 +1,32 @@
+= Wait for MySQL docker container to start
+
+Investigating possible solutions to the following Stack Overflow questions:
+
+1. https://stackoverflow.com/questions/52000903[How to start flyway after database initialization in Docker]
+1. https://stackoverflow.com/questions/42567475[Docker-compose check if mysql connection is ready]
+
+In both cases, the question is essentially: in docker-compose is it possible to have one container wait
+until a second container, in this case a database, is not just running but ready to serve requests.
+
+In this repository, it is the official https://flywaydb.org/[Flyway] https://github.com/flyway/flyway-docker[docker container]
+trying to connect to a https://hub.docker.com/_/percona/[Percona] MySQL database container.
+
+## Tl;DR
+
+Two options that worked well for me:
+
+1. link:docker-compose-2.1[V2.1 Syntax]: Add a https://docs.docker.com/compose/compose-file/compose-file-v2/#healthcheck[healthcheck] to
+   the database container, then use the docker-compose v2.1
+   https://docs.docker.com/compose/compose-file/compose-file-v2/#depends_on[depends_on condition] syntax with a
+   healthcheck.
+
+2. link:extend_flyway[Extend Flyway Container]: Extend the Flyway container to install the MySQL client and add a MySQL-variant of
+   the `wait-for-postgres.sh` script shown in the
+   https://docs.docker.com/compose/startup-order/[docker-compose documentation].
+
+What didn't _always_ work for me (YMMV):
+
+1. https://github.com/jwilder/dockerize[dockerize] - the database port can be available before the database
+   is actually ready to serve requests so the Flyway container can be started too early and fail.
+2. https://github.com/vishnubob/wait-for-it[wait-for-it.sh] - again the database port can be available before
+   the database is actually ready to serve requests.

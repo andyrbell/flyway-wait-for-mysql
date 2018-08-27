@@ -1,0 +1,5 @@
+= dockerize wait
+
+Wait for the database port to be available. Not guaranteed to work as the port may be available before the database is ready.
+
+The dockerize binary is made available from mounted volume: `/flyway/bin`.

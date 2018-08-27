@@ -1,0 +1,20 @@
+version: '3'
+services:
+  my_sql_percona:
+    image: percona:latest
+    container_name: my_sql_percona
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: tms
+    ports:
+    - "3306:3306"
+  migration:
+    image: boxfuse/flyway:latest
+    container_name: flyway_migration
+    volumes:
+     - ../sql:/flyway/sql
+     - ../bin:/flyway/bin
+    entrypoint: ["bash", "/flyway/bin/wait-for-it.sh", "my_sql_percona:3306", "--", "flyway"]      
+    command: -url=jdbc:mysql://my_sql_percona:3306/tms?useUnicode=true&characterEncoding=utf8&useSSL=false -user=root -password=password migrate
+    depends_on:
+      - my_sql_percona

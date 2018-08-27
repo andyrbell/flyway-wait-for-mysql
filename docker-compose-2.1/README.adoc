@@ -1,0 +1,30 @@
+= docker-compose v2.1 depends_on with healthcheck
+
+The v2.1 syntax supports specifying a https://docs.docker.com/compose/compose-file/compose-file-v2/#depends_on[depends_on condition]
+which will delay starting a container until any other containers it depends on are considered healthy, according to any
+https://docs.docker.com/compose/compose-file/compose-file-v2/#healthcheck[healthcheck] defined for those containers.
+
+   version: '2.1'
+   services:
+     my_sql_percona:
+      image: percona:latest
+       ...
+       healthcheck:
+         test: "/usr/bin/mysql --user=root --password=password --execute \"SHOW DATABASES;\""
+         ...
+     migration:
+       image: boxfuse/flyway:latest
+       ...
+       depends_on:
+         my_sql_percona:
+           condition: service_healthy
+
+The downside of this approach is that the `depends_on: condition` syntax has been
+https://github.com/docker/compose/issues/4305[removed in docker-compose v3] to align with `docker stack`.
+
+However, https://github.com/docker/compose/issues/4305#issuecomment-305378202[as stated by one of the docker developers]:
+
+[quote, Joffrey F, Docker]
+There's no reason to use the v3 format if you don't intend to use swarm services.
+
+So maybe this approach is ok until `docker-compose` itself is deprecated in favour of `docker stack deploy`.

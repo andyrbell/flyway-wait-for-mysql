@@ -1,0 +1,9 @@
+= Extend Flyway
+
+Extend the official https://flywaydb.org/[Flyway]
+https://github.com/flyway/flyway-docker[docker container] to install the MySQL client and add a MySQL-variant of
+the `wait-for-postgres.sh` script shown in the
+https://docs.docker.com/compose/startup-order/[docker-compose documentation].
+
+This seems to work fine but requires modifying every container that has a dependency on another to add a custom
+healthcheck. 
